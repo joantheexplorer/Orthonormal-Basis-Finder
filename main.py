@@ -33,8 +33,10 @@ def main():
                 
                 for i, vec in enumerate(orthonormal_vectors):
                     rounded = np.round(vec, 4)
-                    
+                    row_separator = r" \\\\ "
+                    matrix_content = row_separator.join(map(str, rounded))
                     latex_str = f"$$u_{i+1} = \\begin{{bmatrix}} {' \\\\ '.join(map(str, rounded))} \\end{{bmatrix}}$$"
+                    
                     ui.markdown(latex_str)
                     
             ui.notify('Calculation successful!', type='positive')
