@@ -1,12 +1,13 @@
 import sympy
 
-def gram_schmidt_symbolic(vectors):
+def gram_schmidt_symbolic(raw_vectors):
+    vectors = [sympy.Matrix(v) for v in raw_vectors]
 
-    sympy_vecs = []
-    for v in vectors:
-        exact_v = [sympy.nsimplify(x) for x in v]
-        sympy_vecs.append(sympy.Matrix(exact_v))
+    matrix_check = sympy.Matrix(raw_vectors)
+    
+    if matrix_check.rank() < len(vectors):
+        raise ValueError("Vectors are linearly dependent. Please ensure they are unique and not multiples of each other.")
 
-    basis = sympy.GramSchmidt(sympy_vecs, orthonormal=True)
+    basis = sympy.GramSchmidt(vectors, orthonormal=True)
     
     return basis
