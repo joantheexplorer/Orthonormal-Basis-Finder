@@ -29,7 +29,7 @@ def main():
                         
                         col_inputs = []
                         for j in range(n_dim):
-                            field = ui.number(step=1).props('outlined dense input-style="text-align: center"').classes('w-28')
+                            field = ui.input().props('outlined dense input-style="text-align: center"').classes('w-28')
                             col_inputs.append(field)
                         vector_input_fields.append(col_inputs)
 
@@ -47,9 +47,15 @@ def main():
             for col_inputs in vector_input_fields:
                 current_vector = []
                 for box in col_inputs:
-                    if box.value is None:
+                    if not box.value:
                         raise ValueError("Fields cannot be empty")
-                    current_vector.append(float(box.value))
+                    
+                    try:
+                        val = sympy.sympify(box.value)
+                        current_vector.append(val)
+                    except:
+                        raise ValueError(f"Could not understand input: '{box.value}'")
+
                 raw_vectors.append(current_vector)
 
             basis = gram_schmidt_symbolic(raw_vectors)
@@ -60,59 +66,66 @@ def main():
             with results_area:
                 ui.label('3. Results').classes('text-xl font-bold mb-4')
 
-                box_style = 'w-28 h-10 flex items-center justify-center border border-gray-300 rounded shadow-none bg-gray-50 overflow-hidden'
+                box_style = 'min-w-[7rem] max-w-[15rem] w-auto min-h-[2.5rem] p-4 flex items-center justify-center border border-gray-300 rounded shadow-none bg-gray-50'
 
                 ui.label('Exact Form (Symbolic):').classes('text-lg text-slate-600 font-bold mb-2')
 
-                with ui.row().classes('items-center gap-2 flex-nowrap overflow-x-auto p-4'):
+                with ui.row().classes('items-center gap-0 flex-nowrap overflow-x-auto p-4 w-full min-w-0'):
                     
                     indices = [str(k+1) for k in range(len(basis))]
                     v_labels = ", ".join([f"vector v{k}" for k in indices])
                     
-                    ui.label(f"{{ {v_labels} }} = {{").classes('text-2xl font-bold whitespace-nowrap')
+                    ui.label(f"{{ {v_labels} }} = {{").classes('text-2xl font-bold whitespace-nowrap flex-none mr-4')
 
                     for i, sym_vec in enumerate(basis):
                         
-                        with ui.column().classes('gap-1'):
+                        with ui.column().classes('gap-1 flex-none'):
                             for val in sym_vec:
                                 text_str = format_plain_text(val)
                                 
                                 with ui.card().classes(box_style):
-                                    ui.label(text_str).classes('text-sm')
+                                    ui.label(text_str).classes('text-sm break-all text-center leading-tight')
                         
                         if i < len(basis) - 1:
-                            ui.label(',').classes('text-4xl font-bold -mt-2')
+                            ui.label(',').classes('text-4xl font-bold -mt-2 flex-none mx-2')
 
-                    ui.label('}').classes('text-2xl font-bold')
+                    ui.element('div').classes('w-8 shrink-0')
 
+                    ui.label('}').classes('text-2xl font-bold flex-none')
 
                 ui.separator()
 
                 ui.label('Decimal Approximation:').classes('text-lg text-slate-600 font-bold mt-4 mb-2')
 
-                with ui.row().classes('items-center gap-2 flex-nowrap overflow-x-auto p-4'):
+                with ui.row().classes('items-center gap-0 flex-nowrap overflow-x-auto p-4 w-full min-w-0'):
                     
-                    ui.label(f"{{ {v_labels} }} ≈ {{").classes('text-2xl font-bold whitespace-nowrap')
+                    ui.label(f"{{ {v_labels} }} ≈ {{").classes('text-2xl font-bold whitespace-nowrap flex-none mr-4')
 
                     for i, sym_vec in enumerate(basis):
-                        with ui.column().classes('gap-1'):
-                            decimal_values = [float(x.evalf()) for x in sym_vec]
-                            for val in decimal_values:
+                        with ui.column().classes('gap-1 flex-none'):
+                            
+                            for val in sym_vec:
+                                approx = val.evalf()
+                                try:
+                                    f_val = float(approx)
+                                    rounded_val = round(f_val, 6)
+                                    if rounded_val.is_integer():
+                                        display_str = f"{rounded_val:.0f}"
+                                    else:
+                                        display_str = f"{rounded_val:.6f}"
                                 
-                                rounded_val = round(val, 6)
-
-                                if rounded_val.is_integer():
-                                    fmt_string = '%.0f'
-                                else:
-                                    fmt_string = '%.6f'
+                                except TypeError:
+                                    display_str = str(approx)
 
                                 with ui.card().classes(box_style):
-                                    ui.number(value=rounded_val, format=fmt_string).props('borderless dense readonly input-style="text-align: center"').classes('w-full bg-transparent')
+                                    ui.label(display_str).classes('text-sm break-all text-center leading-tight')
                         
                         if i < len(basis) - 1:
-                             ui.label(',').classes('text-4xl font-bold -mt-2')
+                             ui.label(',').classes('text-4xl font-bold -mt-2 flex-none mx-2')
 
-                    ui.label('}').classes('text-2xl font-bold')
+                    ui.element('div').classes('w-8 shrink-0')
+                    
+                    ui.label('}').classes('text-2xl font-bold flex-none')
 
         except ValueError as e:
             ui.notify(str(e), type='warning')
