@@ -52,7 +52,7 @@ def main():
         input_area.set_visibility(True)
 
         with input_area:
-            ui.label('2. Enter Values').classes(SECTION_HEADER)
+            ui.label('Enter Values').classes(SECTION_HEADER)
             
             with ui.grid(columns=n_vectors).classes(INPUT_GRID):
                 for i in range(n_vectors):
@@ -130,7 +130,10 @@ def main():
             results_area.set_visibility(True)
             
             with results_area:
-                ui.label('SOLUTION').classes('text-3xl font-bold text-teal-600 mb-6 w-full text-center')
+                ui.label('Results').classes(SECTION_HEADER)
+                
+                ui.label("Therefore, the Gram-Schmidt Process produced the following orthonormal basis for the subspace spanned by the given vectors:") \
+                    .classes(RESULT_INSTRUCTION)
                 
                 ui.html(
                     r'''
@@ -224,9 +227,6 @@ def main():
                             )
 
                 ui.separator()
-
-                ui.label("Therefore, the Gram-Schmidt Process produced the following orthonormal basis for the subspace spanned by the given vectors:") \
-                    .classes(RESULT_INSTRUCTION)
 
                 ui.label('Exact Form (Symbolic):').classes(SUBSECTION_HEADER)
                 
@@ -353,8 +353,10 @@ def main():
 
     with ui.column().classes(MAIN_CONTAINER):
         
+        ui.label('ORTHONORMAL BASIS FINDER').classes(CONFIG_HEADER)
+        
         with ui.card().classes(CONFIG_CARD):
-            ui.label('1. Configuration').classes(CONFIG_HEADER)
+            ui.label('Configuration').classes(CONFIG_HEADER)
             
             with ui.row().classes(INPUT_ROW):
                 num_vecs_input = ui.number('How many vectors?', value=2, min=1, precision=0).classes(INPUT_FIELD_WIDTH)
@@ -368,7 +370,7 @@ def main():
         results_area = ui.card().classes(RESULTS_AREA_CARD)
         results_area.set_visibility(False)
 
-    ui.run(title="Exact Basis Finder")
+    ui.run(title="Orthonormal Basis Finder")
 
 if __name__ in {"__main__", "__mp_main__"}:
     main()
