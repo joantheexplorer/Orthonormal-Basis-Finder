@@ -3,7 +3,7 @@ import sympy
 from ortho_logic import gram_schmidt_with_steps
 from styles import *
 
-ui.run(native=True, reload=False)
+
 ui.add_head_html('''
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <script>
@@ -391,7 +391,7 @@ def main():
             ui.label('Silva, Chelsey Claire').classes('text-base text-slate-600 font-medium')
             ui.label('Teston, Michelle').classes('text-base text-slate-600 font-medium')
     
-    ui.run(title="Orthonormal Basis Finder")
+    ui.run(title="Orthonormal Basis Finder", reload=False)
 
 if __name__ in {"__main__", "__mp_main__"}:
     main()
