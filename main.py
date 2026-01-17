@@ -73,6 +73,40 @@ def main():
     def format_plain_text(val):
         return sympy.latex(val)
 
+    def parse_user_input(user_input):
+        normalized = user_input.strip()
+        normalized = normalized.replace('√', 'sqrt(')
+        
+        sqrt_count = user_input.count('√')
+        if sqrt_count > 0:
+            normalized = normalized.replace('sqrt(', 'sqrt')
+            normalized = normalized.replace('sqrt', 'sqrt(')
+            parts = []
+            i = 0
+            while i < len(normalized):
+                if normalized[i:i+5] == 'sqrt(':
+                    parts.append('sqrt(')
+                    i += 5
+                    arg_start = i
+                    depth = 1
+                    while i < len(normalized) and depth > 0:
+                        if normalized[i] == '(':
+                            depth += 1
+                        elif normalized[i] == ')':
+                            depth -= 1
+                        i += 1
+                    if depth == 1:
+                        parts.append(normalized[arg_start:i])
+                        parts.append(')')
+                    else:
+                        parts.append(normalized[arg_start:i])
+                else:
+                    parts.append(normalized[i])
+                    i += 1
+            normalized = ''.join(parts)
+        
+        return normalized
+
     def run_calculation():
         try:
             raw_vectors = []
@@ -83,7 +117,8 @@ def main():
                         raise ValueError("Fields cannot be empty")
                     
                     try:
-                        val = sympy.sympify(box.value)
+                        parsed_input = parse_user_input(box.value)
+                        val = sympy.sympify(parsed_input)
                         current_vector.append(val)
                     except:
                         raise ValueError(f"Could not understand input: '{box.value}'")
