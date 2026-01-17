@@ -1,28 +1,57 @@
 import sympy
 
-def gram_schmidt_symbolic(raw_vectors):
-    if not raw_vectors:
-        return []
-
+def gram_schmidt_with_steps(raw_vectors):
     cleaned_vectors = []
     for v in raw_vectors:
-        try:
-            clean_v = sympy.Matrix([sympy.nsimplify(x) for x in v])
-            cleaned_vectors.append(clean_v)
-        except Exception:
-            raise ValueError(f"Invalid vector data: {v}")
-
-    ref_dim = len(cleaned_vectors[0])
-    if any(len(v) != ref_dim for v in cleaned_vectors):
-        raise ValueError(f"Dimension mismatch: All vectors must have dimension {ref_dim}.")
-
-    matrix_check = sympy.Matrix.hstack(*cleaned_vectors)
-    
-    if matrix_check.rank() < len(cleaned_vectors):
+        cleaned_vectors.append(sympy.Matrix([sympy.nsimplify(x) for x in v]))
+        
+    if sympy.Matrix.hstack(*cleaned_vectors).rank() < len(cleaned_vectors):
         raise ValueError("Vectors are linearly dependent.")
 
-    basis = sympy.GramSchmidt(cleaned_vectors, orthonormal=True)
-    
-    final_basis = [vec.applyfunc(sympy.simplify) for vec in basis]
-    
-    return final_basis
+    orthogonal_basis = []
+    orthonormal_basis = []
+    steps = []
+
+    for i, v in enumerate(cleaned_vectors):
+        step_data = {
+            'index': i + 1,
+            'input_vec': v,
+            'projections': [],
+            'orthogonal_vec': None,
+            'norm': None,
+            'final_vec': None
+        }
+        
+        u = v
+        
+        for prev_u in orthogonal_basis:
+            numerator = v.dot(prev_u)
+            denominator = prev_u.dot(prev_u)
+            
+            coeff = numerator / denominator
+            projection = coeff * prev_u
+            
+            step_data['projections'].append({
+                'basis_vec': prev_u,
+                'coeff': coeff,
+                'projection': projection
+            })
+            
+            u = u - projection
+
+        u = u.applyfunc(sympy.simplify)
+        step_data['orthogonal_vec'] = u
+        orthogonal_basis.append(u)
+
+        norm = u.norm()
+        norm = sympy.simplify(norm)
+        step_data['norm'] = norm
+        
+        e = u / norm
+        e = e.applyfunc(sympy.simplify)
+        step_data['final_vec'] = e
+        orthonormal_basis.append(e)
+        
+        steps.append(step_data)
+
+    return orthonormal_basis, steps

@@ -1,6 +1,6 @@
 from nicegui import ui
 import sympy
-from ortho_logic import gram_schmidt_symbolic
+from ortho_logic import gram_schmidt_with_steps
 from styles import *
 
 ui.add_head_html('''
@@ -70,9 +70,6 @@ def main():
                 ui.button('Calculate Basis', on_click=run_calculation).classes(BUTTON_CALCULATE)
                 ui.button('Reset', on_click=reset_app).classes(BUTTON_RESET)
 
-    def format_plain_text(val):
-        return sympy.latex(val)
-
     def parse_user_input(user_input):
         normalized = user_input.strip()
         normalized = normalized.replace('√', 'sqrt(')
@@ -125,77 +122,150 @@ def main():
 
                 raw_vectors.append(current_vector)
 
-            basis = gram_schmidt_symbolic(raw_vectors)
+            basis, steps = gram_schmidt_with_steps(raw_vectors)
 
             results_area.clear()
             results_area.set_visibility(True)
             
             with results_area:
-                ui.label('3. Results').classes(SECTION_HEADER)
+                ui.label('SOLUTION').classes('text-3xl font-bold text-teal-600 mb-6 w-full text-center')
                 
+                ui.html(
+                    r'''
+                    <div class="w-full text-left text-gray-800 mb-8 text-lg leading-relaxed">
+                        <p class="mb-2">According to the Gram-Schmidt process:</p>
+                        $$ \vec{u}_k = \vec{v}_k - \sum_{j=1}^{k-1} \text{proj}_{\vec{u}_j}(\vec{v}_k) $$
+                        <p class="my-4">where the projection is:</p>
+                        $$ \text{proj}_{\vec{u}_j}(\vec{v}_k) = \frac{\langle \vec{v}_k, \vec{u}_j \rangle}{||\vec{u}_j||^2} \vec{u}_j $$
+                        <p class="mt-4">The normalized vector is:</p>
+                        $$ \vec{e}_k = \frac{1}{||\vec{u}_k||} \vec{u}_k $$
+                    </div>
+                    ''',
+                    sanitize=False
+                )
+
+                for step in steps:
+                    idx = step['index']
+                    
+                    with ui.column().classes('w-full mb-8'):
+                        ui.label(f'Step {idx}').classes('text-xl font-bold text-slate-800 mb-4 border-b pb-2 w-full')
+                        
+                        v_latex = sympy.latex(step['input_vec'])
+                        u_latex = sympy.latex(step['orthogonal_vec'])
+                        norm_latex = sympy.latex(step['norm'])
+                        e_latex = sympy.latex(step['final_vec'])
+
+                        if idx == 1:
+                            ui.html(
+                                f'''
+                                <div class="w-full overflow-x-auto text-lg">
+                                    $$ \\vec{{u}}_1 = \\vec{{v}}_1 = {v_latex} $$
+                                </div>
+                                <div class="w-full overflow-x-auto mt-6 text-lg">
+                                    $$ \\vec{{e}}_1 = \\frac{{1}}{{||\\vec{{u}}_1||}} \\vec{{u}}_1 = \\frac{{1}}{{{norm_latex}}} {u_latex} = {e_latex} $$
+                                </div>
+                                ''',
+                                sanitize=False
+                            )
+                        
+                        else:
+                            ui.label('Calculate projections:').classes('text-md font-bold text-gray-600 mb-2')
+                            
+                            proj_terms_latex = []
+                            
+                            for p_idx, proj in enumerate(step['projections']):
+                                prev_u_latex = sympy.latex(proj['basis_vec'])
+                                coeff_latex = sympy.latex(proj['coeff'])
+                                proj_res_latex = sympy.latex(proj['projection'])
+                                
+                                proj_terms_latex.append(proj_res_latex)
+                                
+                                ui.html(
+                                    f'''
+                                    <div class="ml-4 mb-4 text-md w-full overflow-x-auto">
+                                        $$ \\text{{proj}}_{{\\vec{{u}}_{p_idx+1}}}(\\vec{{v}}_{idx}) = 
+                                        {coeff_latex} \\cdot {prev_u_latex} = {proj_res_latex} $$
+                                    </div>
+                                    ''', 
+                                    sanitize=False
+                                )
+
+                            subtraction_str = f"{v_latex}"
+                            for term in proj_terms_latex:
+                                subtraction_str += f" - {term}"
+
+                            ui.label('Calculate orthogonal vector:').classes('text-md font-bold text-gray-600 mt-4 mb-2')
+                            
+                            ui.html(
+                                f'''
+                                <div class="w-full overflow-x-auto text-lg">
+                                    $$ \\begin{{align*}} 
+                                    \\vec{{u}}_{idx} &= \\vec{{v}}_{idx} - \\sum_{{j=1}}^{{{idx-1}}} \\text{{proj}}_{{\\vec{{u}}_j}}(\\vec{{v}}_{idx}) \\\\
+                                    &= {subtraction_str} \\\\
+                                    &= {u_latex}
+                                    \\end{{align*}} $$
+                                </div>
+                                ''',
+                                sanitize=False
+                            )
+
+                            ui.label('Normalize:').classes('text-md font-bold text-gray-600 mt-4 mb-2')
+                            
+                            ui.html(
+                                f'''
+                                <div class="w-full overflow-x-auto text-lg">
+                                    $$ \\vec{{e}}_{idx} = \\frac{{1}}{{||\\vec{{u}}_{idx}||}} \\vec{{u}}_{idx} = 
+                                    \\frac{{1}}{{{norm_latex}}} {u_latex} = {e_latex} $$
+                                </div>
+                                ''',
+                                sanitize=False
+                            )
+
+                ui.separator()
+
                 ui.label("Therefore, the Gram-Schmidt Process produced the following orthonormal basis for the subspace spanned by the given vectors:") \
                     .classes(RESULT_INSTRUCTION)
 
-                box_style = RESULT_BOX
-
                 ui.label('Exact Form (Symbolic):').classes(SUBSECTION_HEADER)
+                
+                basis_latex = [sympy.latex(vec) for vec in basis]
+                basis_str = ", ".join(basis_latex)
+                
+                labels_str = ", ".join([f"\\vec{{e}}_{{{k+1}}}" for k in range(len(basis))])
 
-                with ui.row().classes(VECTOR_NOTATION_ROW):
-                    
-                    indices = [str(k+1) for k in range(len(basis))]
-                    v_labels = ", ".join([f"vector v{k}" for k in indices])
-                    
-                    ui.label(f"{{ {v_labels} }} = {{").classes(VECTOR_OPENING_BRACE)
-
-                    for i, sym_vec in enumerate(basis):
-                        
-                        with ui.column().classes(RESULT_COLUMN):
-                            for val in sym_vec:
-                                latex_str = sympy.latex(val)
-                                
-                                with ui.card().classes(box_style):
-                                    ui.html(f'<div style="text-align: center;">$${latex_str}$$</div>', sanitize=False)
-                        
-                        if i < len(basis) - 1:
-                            ui.label(',').classes(VECTOR_COMMA)
-
-                    ui.element('div').classes(VECTOR_CLOSING_BRACKET)
-                    ui.label('}').classes(VECTOR_CLOSING_BRACE)
-
-                ui.run_javascript('renderMath();')
+                ui.html(
+                    f'''
+                    <div class="w-full overflow-x-auto text-lg flex justify-start items-center p-4">
+                        $$ \\{{ {labels_str} \\}} = \\left\\{{ {basis_str} \\right\\}} $$
+                    </div>
+                    ''',
+                    sanitize=False
+                )
 
                 ui.separator()
 
                 ui.label('Decimal Approximation:').classes(SUBSECTION_HEADER_MARGIN_TOP)
 
-                with ui.row().classes(VECTOR_NOTATION_ROW):
-                    
-                    ui.label(f"{{ {v_labels} }} ≈ {{").classes(VECTOR_OPENING_BRACE)
+                decimal_latex = []
+                for vec in basis:
+                    def smart_round(x):
+                        f = float(x.evalf())
+                        r = round(f, 6)
+                        return int(r) if r.is_integer() else r
 
-                    for i, sym_vec in enumerate(basis):
-                        with ui.column().classes(RESULT_COLUMN):
-                            
-                            for val in sym_vec:
-                                approx = val.evalf()
-                                try:
-                                    f_val = float(approx)
-                                    rounded_val = round(f_val, 6)
-                                    if rounded_val.is_integer():
-                                        display_str = f"{rounded_val:.0f}"
-                                    else:
-                                        display_str = f"{rounded_val:.6f}"
-                                
-                                except TypeError:
-                                    display_str = str(approx)
+                    approx_vec = vec.applyfunc(smart_round)
+                    decimal_latex.append(sympy.latex(approx_vec))
 
-                                with ui.card().classes(box_style):
-                                    ui.html(f'<div style="text-align: center;">$${display_str}$$</div>', sanitize=False)
-                        
-                        if i < len(basis) - 1:
-                             ui.label(',').classes(VECTOR_COMMA)
+                decimal_str = ", ".join(decimal_latex)
 
-                    ui.element('div').classes(VECTOR_CLOSING_BRACKET)
-                    ui.label('}').classes(VECTOR_CLOSING_BRACE)
+                ui.html(
+                    f'''
+                    <div class="w-full overflow-x-auto text-lg flex justify-start items-center p-4">
+                        $$ \\{{ {labels_str} \\}} \\approx \\left\\{{ {decimal_str} \\right\\}} $$
+                    </div>
+                    ''',
+                    sanitize=False
+                )
 
                 ui.run_javascript('renderMath();')
 
