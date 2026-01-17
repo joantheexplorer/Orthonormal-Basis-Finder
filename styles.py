@@ -1,16 +1,16 @@
 # Main layout styles
-MAIN_CONTAINER = 'w-full items-center p-10 space-y-4'
+MAIN_CONTAINER = 'w-full items-center p-10 space-y-6'
 CARD_FULL_WIDTH = 'w-full max-w-5xl'
 CONFIG_CARD = 'w-full max-w-5xl bg-slate-50'
 INPUT_AREA_CARD = 'w-full max-w-5xl'
-RESULTS_AREA_CARD = 'w-full max-w-5xl bg-white'
+RESULTS_AREA_CARD = 'w-full max-w-5xl bg-white p-6'
 
 # Header/Label styles
 CONFIG_HEADER = 'text-xl font-bold text-slate-800'
-SECTION_HEADER = 'text-xl font-bold mb-2'
-RESULT_INSTRUCTION = 'text-md text-slate-700 mb-6 italic'
-SUBSECTION_HEADER = 'text-lg text-slate-600 font-bold mb-2'
-SUBSECTION_HEADER_MARGIN_TOP = 'text-lg text-slate-600 font-bold mt-4 mb-2'
+SECTION_HEADER = 'text-xl font-bold mb-4'
+RESULT_INSTRUCTION = 'text-md text-slate-700 mb-8 italic'
+SUBSECTION_HEADER = 'text-lg text-slate-600 font-bold mb-4'
+SUBSECTION_HEADER_MARGIN_TOP = 'text-lg text-slate-600 font-bold mt-8 mb-4'
 
 # Input styles
 INPUT_ROW = 'w-full gap-4 items-end'

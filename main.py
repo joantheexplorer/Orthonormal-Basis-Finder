@@ -3,6 +3,24 @@ import sympy
 from ortho_logic import gram_schmidt_symbolic
 from styles import *
 
+ui.add_head_html('''
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+    window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+            displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
+        },
+        svg: {fontCache: 'global'}
+    };
+    function renderMath() {
+        if (window.MathJax?.typesetPromise) {
+            MathJax.typesetPromise().catch(err => console.log(err));
+        }
+    }
+</script>
+''')
+
 def main():
     vector_input_fields = []
 
@@ -53,10 +71,7 @@ def main():
                 ui.button('Reset', on_click=reset_app).classes(BUTTON_RESET)
 
     def format_plain_text(val):
-        s = str(val)
-        s = s.replace('sqrt', '√')
-        s = s.replace('*', '')
-        return s
+        return sympy.latex(val)
 
     def run_calculation():
         try:
@@ -101,16 +116,18 @@ def main():
                         
                         with ui.column().classes(RESULT_COLUMN):
                             for val in sym_vec:
-                                text_str = format_plain_text(val)
+                                latex_str = sympy.latex(val)
                                 
                                 with ui.card().classes(box_style):
-                                    ui.label(text_str).classes(RESULT_BOX_LABEL)
+                                    ui.html(f'<div style="text-align: center;">$${latex_str}$$</div>', sanitize=False)
                         
                         if i < len(basis) - 1:
                             ui.label(',').classes(VECTOR_COMMA)
 
                     ui.element('div').classes(VECTOR_CLOSING_BRACKET)
                     ui.label('}').classes(VECTOR_CLOSING_BRACE)
+
+                ui.run_javascript('renderMath();')
 
                 ui.separator()
 
@@ -137,13 +154,15 @@ def main():
                                     display_str = str(approx)
 
                                 with ui.card().classes(box_style):
-                                    ui.label(display_str).classes(RESULT_BOX_LABEL)
+                                    ui.html(f'<div style="text-align: center;">$${display_str}$$</div>', sanitize=False)
                         
                         if i < len(basis) - 1:
                              ui.label(',').classes(VECTOR_COMMA)
 
                     ui.element('div').classes(VECTOR_CLOSING_BRACKET)
                     ui.label('}').classes(VECTOR_CLOSING_BRACE)
+
+                ui.run_javascript('renderMath();')
 
         except ValueError as e:
             ui.notify(str(e), type='warning')
