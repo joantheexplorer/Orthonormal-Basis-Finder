@@ -22,6 +22,7 @@ ui.add_head_html('''
 ''')
 
 def main():
+    ## ------------------------------------------------------------------------ ##
     vector_input_fields = []
 
     def reset_app():
@@ -51,8 +52,10 @@ def main():
         vector_input_fields.clear()
         input_area.set_visibility(True)
 
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
+
         with input_area:
-            ui.label('2. Enter Values').classes(SECTION_HEADER)
+            ui.label('Enter Values').classes(SECTION_HEADER)
             
             with ui.grid(columns=n_vectors).classes(INPUT_GRID):
                 for i in range(n_vectors):
@@ -129,9 +132,11 @@ def main():
 
             results_area.clear()
             results_area.set_visibility(True)
-            
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
+
             with results_area:
-                ui.label('3. Results').classes(SECTION_HEADER)
+                ui.label('Results').classes(SECTION_HEADER)
                 
                 ui.label("Therefore, the Gram-Schmidt Process produced the following orthonormal basis for the subspace spanned by the given vectors:") \
                     .classes(RESULT_INSTRUCTION)
@@ -205,9 +210,11 @@ def main():
             ui.notify(f"Error: {e}", type='negative')
 
     with ui.column().classes(MAIN_CONTAINER):
-        
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ##
+        ui.label('ORTHONORMAL BASIS FINDER').classes(CONFIG_HEADER)
         with ui.card().classes(CONFIG_CARD):
-            ui.label('1. Configuration').classes(CONFIG_HEADER)
+            ui.label('Configuration').classes(CONFIG_HEADER)
             
             with ui.row().classes(INPUT_ROW):
                 num_vecs_input = ui.number('How many vectors?', value=2, min=1, precision=0).classes(INPUT_FIELD_WIDTH)
@@ -221,7 +228,7 @@ def main():
         results_area = ui.card().classes(RESULTS_AREA_CARD)
         results_area.set_visibility(False)
 
-    ui.run(title="Exact Basis Finder")
+    ui.run(title="Orthonormal Basis Finder")
 
 if __name__ in {"__main__", "__mp_main__"}:
     main()
