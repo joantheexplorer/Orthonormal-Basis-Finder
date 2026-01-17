@@ -391,7 +391,7 @@ def main():
             ui.label('Silva, Chelsey Claire').classes('text-base text-slate-600 font-medium')
             ui.label('Teston, Michelle').classes('text-base text-slate-600 font-medium')
     
-    ui.run(title="Orthonormal Basis Finder", reload=False)
+    ui.run(title="Orthonormal Basis Finder", reload=False, native=True)
 
 if __name__ in {"__main__", "__mp_main__"}:
     main()
