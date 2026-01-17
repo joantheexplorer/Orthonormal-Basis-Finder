@@ -22,6 +22,15 @@ ui.add_head_html('''
 ''')
 
 def main():
+    ui.add_css('''
+        .nicegui-content { 
+            padding: 0;
+            background-color: #EEF2FF;
+            background-image: 
+                radial-gradient(at 40% 20%, hsla(266,100%,70%,1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(189,100%,56%,1) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(340,100%,76%,1) 0px, transparent 50%);}
+    ''')
     vector_input_fields = []
 
     def reset_app():
@@ -52,7 +61,7 @@ def main():
         input_area.set_visibility(True)
 
         with input_area:
-            ui.label('Enter Values').classes(CONFIG_HEADER)
+            ui.label('Enter Values').classes(SECTION_HEADER)
             
             with ui.grid(columns=n_vectors).classes(INPUT_GRID):
                 for i in range(n_vectors):
@@ -130,7 +139,7 @@ def main():
             results_area.set_visibility(True)
             
             with results_area:
-                ui.label('Results').classes(CONFIG_HEADER)
+                ui.label('Results').classes(SECTION_HEADER)
                 
                 ui.label("Therefore, the Gram-Schmidt Process produced the following orthonormal basis for the subspace spanned by the given vectors:") \
                     .classes(RESULT_INSTRUCTION)
@@ -292,8 +301,8 @@ def main():
                         ui.clipboard.write(latex_code)
                         ui.notify('LaTeX code copied to clipboard!', type='positive')
 
-                    ui.button('Copy as Python Code', on_click=copy_python_code, icon='code').classes('bg-slate-700 text-white')
-                    ui.button('Copy as LaTeX', on_click=copy_latex_code, icon='content_copy').classes('bg-slate-600 text-white')
+                    ui.button('Copy as Python Code', on_click=copy_python_code, icon='code').classes('!bg-violet-500 text-white')
+                    ui.button('Copy as LaTeX', on_click=copy_latex_code, icon='content_copy').classes('!bg-violet-500 text-white')
 
                 n_dim = int(dim_input.value)
                 
@@ -356,7 +365,7 @@ def main():
         ui.label('ORTHONORMAL BASIS FINDER').classes(CONFIG_HEADER)
         
         with ui.card().classes(CONFIG_CARD):
-            ui.label('Configuration').classes(CONFIG_HEADER)
+            ui.label('Configuration').classes(SECTION_HEADER)
             
             with ui.row().classes(INPUT_ROW):
                 num_vecs_input = ui.number('How many vectors?', value=2, min=1, precision=0).classes(INPUT_FIELD_WIDTH)
