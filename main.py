@@ -385,7 +385,7 @@ def main():
             ui.label('DEVELOPERS').classes('font-extrabold text-slate-800 text-base tracking-widest mb-2')
             
             ui.label('Aviles, Joan Kathleen').classes('text-base text-slate-600 font-medium')
-            ui.label('Borilla, Johnrex Mecleod').classes('text-base text-slate-600 font-medium')
+            ui.label('Borilla, Johnrex Macleod').classes('text-base text-slate-600 font-medium')
             ui.label('Guiang, Stephanie Mae').classes('text-base text-slate-600 font-medium')
             ui.label('Silva, Chelsey Claire').classes('text-base text-slate-600 font-medium')
             ui.label('Teston, Michelle').classes('text-base text-slate-600 font-medium')
