@@ -1,75 +1,172 @@
 from nicegui import ui
-import numpy as np
-import ast
-from ortho_logic import gram_schmidt
+import sympy
+from ortho_logic import gram_schmidt_symbolic
 
 def main():
-    # Logic Handlers
-    def calculate_basis():
-        input_str = text_input.value.strip()
+    vector_input_fields = []
+
+    def reset_app():
+        num_vecs_input.value = 2
+        dim_input.value = 3
         
-        if not input_str:
-            ui.notify('Please enter vector data.', type='warning')
+        vector_input_fields.clear()
+        
+        input_area.clear()
+        input_area.set_visibility(False)
+        
+        results_area.clear()
+        results_area.set_visibility(False)
+        
+        ui.notify('Application reset.', type='info')
+
+    def create_input_grid():
+        try:
+            n_vectors = int(num_vecs_input.value)
+            n_dim = int(dim_input.value)
+        except:
+            ui.notify('Please enter valid integers.', type='warning')
             return
 
+        input_area.clear()
+        results_area.clear()
+        vector_input_fields.clear()
+        input_area.set_visibility(True)
+
+        with input_area:
+            ui.label('2. Enter Values').classes('text-xl font-bold mb-2')
+            
+            with ui.grid(columns=n_vectors).classes('gap-6 mb-4 items-start'):
+                for i in range(n_vectors):
+                    with ui.column().classes('items-center gap-2'):
+                        
+                        ui.html(f'<div style="font-size: 1.25rem; font-weight: bold;">vector v{i+1}</div>', sanitize=False)
+                        
+                        col_inputs = []
+                        for j in range(n_dim):
+                            field = ui.input().props('outlined dense input-style="text-align: center"').classes('w-28')
+                            col_inputs.append(field)
+                        vector_input_fields.append(col_inputs)
+
+            with ui.row().classes('w-full gap-4'):
+                ui.button('Calculate Basis', on_click=run_calculation).classes('bg-green-600 text-white flex-grow')
+                ui.button('Reset', on_click=reset_app).classes('bg-slate-400 text-white w-32')
+
+    def format_plain_text(val):
+        s = str(val)
+        s = s.replace('sqrt', '√')
+        s = s.replace('*', '')
+        return s
+
+    def run_calculation():
         try:
-            # 1. Parse Input safely
-            # We expect input like: [1, 1, 0], [1, 0, 1], [0, 1, 1]
-            if not input_str.startswith('['):
-                input_str = f"[{input_str}]"
-            
-            raw_vectors = ast.literal_eval(input_str)
-            
-            if not isinstance(raw_vectors, (list, tuple)):
-                raise ValueError("Input must be a collection of vectors.")
+            raw_vectors = []
+            for col_inputs in vector_input_fields:
+                current_vector = []
+                for box in col_inputs:
+                    if not box.value:
+                        raise ValueError("Fields cannot be empty")
+                    
+                    try:
+                        val = sympy.sympify(box.value)
+                        current_vector.append(val)
+                    except:
+                        raise ValueError(f"Could not understand input: '{box.value}'")
 
-            # 2. Run Calculation
-            orthonormal_vectors = gram_schmidt(raw_vectors)
+                raw_vectors.append(current_vector)
+
+            basis = gram_schmidt_symbolic(raw_vectors)
+
+            results_area.clear()
+            results_area.set_visibility(True)
             
-            # 3. Output for Display
-            results_container.clear()
-            with results_container:
-                ui.label('Orthonormal Basis Result: ').classes('text-xl font-bold mb-2')
+            with results_area:
+                ui.label('3. Results').classes('text-xl font-bold mb-2')
                 
-                for i, vec in enumerate(orthonormal_vectors):
-                    rounded = np.round(vec, 4)
-                    row_separator = r" \\\\ "
-                    matrix_content = row_separator.join(map(str, rounded))
-                    latex_str = f"$$u_{i+1} = \\begin{{bmatrix}} {' \\\\ '.join(map(str, rounded))} \\end{{bmatrix}}$$"
-                    
-                    ui.markdown(latex_str)
-                    
-            ui.notify('Calculation successful!', type='positive')
+                ui.label("Therefore, the Gram-Schmidt Process produced the following orthonormal basis for the subspace spanned by the given vectors:") \
+                    .classes('text-md text-slate-700 mb-6 italic')
 
-        except ValueError as ve:
-            ui.notify(f"Math Error: {str(ve)}", type='negative')
-        except SyntaxError:
-            ui.notify("Format Error: Check your syntax (e.g., use brackets [1,0], [0,1])", type='negative')
+                box_style = 'min-w-[7rem] max-w-[15rem] w-auto min-h-[2.5rem] p-4 flex items-center justify-center border border-gray-300 rounded shadow-none bg-gray-50'
+
+                ui.label('Exact Form (Symbolic):').classes('text-lg text-slate-600 font-bold mb-2')
+
+                with ui.row().classes('items-center gap-0 flex-nowrap overflow-x-auto p-4 w-full min-w-0'):
+                    
+                    indices = [str(k+1) for k in range(len(basis))]
+                    v_labels = ", ".join([f"vector v{k}" for k in indices])
+                    
+                    ui.label(f"{{ {v_labels} }} = {{").classes('text-2xl font-bold whitespace-nowrap flex-none mr-4')
+
+                    for i, sym_vec in enumerate(basis):
+                        
+                        with ui.column().classes('gap-1 flex-none'):
+                            for val in sym_vec:
+                                text_str = format_plain_text(val)
+                                
+                                with ui.card().classes(box_style):
+                                    ui.label(text_str).classes('text-sm break-all text-center leading-tight')
+                        
+                        if i < len(basis) - 1:
+                            ui.label(',').classes('text-4xl font-bold -mt-2 flex-none mx-2')
+
+                    ui.element('div').classes('w-8 shrink-0')
+                    ui.label('}').classes('text-2xl font-bold flex-none')
+
+                ui.separator()
+
+                ui.label('Decimal Approximation:').classes('text-lg text-slate-600 font-bold mt-4 mb-2')
+
+                with ui.row().classes('items-center gap-0 flex-nowrap overflow-x-auto p-4 w-full min-w-0'):
+                    
+                    ui.label(f"{{ {v_labels} }} ≈ {{").classes('text-2xl font-bold whitespace-nowrap flex-none mr-4')
+
+                    for i, sym_vec in enumerate(basis):
+                        with ui.column().classes('gap-1 flex-none'):
+                            
+                            for val in sym_vec:
+                                approx = val.evalf()
+                                try:
+                                    f_val = float(approx)
+                                    rounded_val = round(f_val, 6)
+                                    if rounded_val.is_integer():
+                                        display_str = f"{rounded_val:.0f}"
+                                    else:
+                                        display_str = f"{rounded_val:.6f}"
+                                
+                                except TypeError:
+                                    display_str = str(approx)
+
+                                with ui.card().classes(box_style):
+                                    ui.label(display_str).classes('text-sm break-all text-center leading-tight')
+                        
+                        if i < len(basis) - 1:
+                             ui.label(',').classes('text-4xl font-bold -mt-2 flex-none mx-2')
+
+                    ui.element('div').classes('w-8 shrink-0')
+                    ui.label('}').classes('text-2xl font-bold flex-none')
+
+        except ValueError as e:
+            ui.notify(str(e), type='warning')
         except Exception as e:
-            ui.notify(f"Unexpected Error: {str(e)}", type='negative')
+            ui.notify(f"Error: {e}", type='negative')
 
-    # GUI Layout
-    with ui.column().classes('w-full items-center justify-center p-10 space-y-4'):
+    with ui.column().classes('w-full items-center p-10 space-y-4'):
         
-        # Title 
-        with ui.card().classes('w-full max-w-2xl p-6 bg-slate-50'):
-            ui.label('Orthonormal Basis Finder').classes('text-2xl font-bold text-slate-800')
-            ui.label('Enter vectors separated by commas. Example: [1, 1, 0], [1, 0, 1]').classes('text-slate-500 italic')
+        with ui.card().classes('w-full max-w-5xl bg-slate-50'):
+            ui.label('1. Configuration').classes('text-xl font-bold text-slate-800')
+            
+            with ui.row().classes('w-full gap-4 items-end'):
+                num_vecs_input = ui.number('How many vectors?', value=2, min=1, precision=0).classes('w-40')
+                dim_input = ui.number('Dimensions per vector?', value=3, min=1, precision=0).classes('w-40')
+                
+                ui.button('Generate Inputs', on_click=create_input_grid).classes('bg-blue-600 text-white')
 
-            # Input
-            text_input = ui.textarea(
-                label='Input Vectors', 
-                placeholder='[1, 1, 0], [1, 0, 1], [0, 1, 1]'
-            ).classes('w-full').props('outlined')
+        input_area = ui.card().classes('w-full max-w-5xl')
+        input_area.set_visibility(False)
 
-            # Action
-            ui.button('Calculate Basis', on_click=calculate_basis).classes('w-full bg-blue-600 text-white')
+        results_area = ui.card().classes('w-full max-w-5xl bg-white')
+        results_area.set_visibility(False)
 
-        # Results
-        results_container = ui.column().classes('w-full max-w-2xl items-center bg-white p-4 rounded shadow-md')
-
-    # GUI
-    ui.run(title="Orthonormal Calculator")
+    ui.run(title="Exact Basis Finder")
 
 if __name__ in {"__main__", "__mp_main__"}:
     main()

@@ -1,29 +1,28 @@
-import numpy as np
+import sympy
 
-def gram_schmidt(vectors):
-    """
-    Takes a list of vectors (lists or numpy arrays) and returns 
-    the orthonormal basis using the Gram-Schmidt process.
-    """
-    basis = []
+def gram_schmidt_symbolic(raw_vectors):
+    if not raw_vectors:
+        return []
+
+    cleaned_vectors = []
+    for v in raw_vectors:
+        try:
+            clean_v = sympy.Matrix([sympy.nsimplify(x) for x in v])
+            cleaned_vectors.append(clean_v)
+        except Exception:
+            raise ValueError(f"Invalid vector data: {v}")
+
+    ref_dim = len(cleaned_vectors[0])
+    if any(len(v) != ref_dim for v in cleaned_vectors):
+        raise ValueError(f"Dimension mismatch: All vectors must have dimension {ref_dim}.")
+
+    matrix_check = sympy.Matrix.hstack(*cleaned_vectors)
     
-    for v in vectors:
-        v = np.array(v, dtype=float)
-        
-        temp_vec = v.copy()
-        for b in basis:
-            proj = np.dot(v, b) * b
-            temp_vec -= proj
-        
-        # Check if the resulting vector is zero
-        # (This happens if vectors are linearly dependent)
-        norm = np.linalg.norm(temp_vec)
-        
-        if norm < 1e-10: 
-            raise ValueError("Vectors are linearly dependent. Cannot form a basis.")
-            
-        # Normalize the vector
-        unit_vec = temp_vec / norm
-        basis.append(unit_vec)
-        
-    return basis
+    if matrix_check.rank() < len(cleaned_vectors):
+        raise ValueError("Vectors are linearly dependent.")
+
+    basis = sympy.GramSchmidt(cleaned_vectors, orthonormal=True)
+    
+    final_basis = [vec.applyfunc(sympy.simplify) for vec in basis]
+    
+    return final_basis
